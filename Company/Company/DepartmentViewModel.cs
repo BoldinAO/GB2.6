@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Windows.Data;
 
 namespace Company
 {
-    class DepartmentViewModel
+    class DepartmentViewModel : MyPropertyChanged
     {
         private readonly CollectionView departments;
         private string department;
@@ -34,17 +33,51 @@ namespace Company
             get { return departments; }
         }
 
+        /// <summary>
+        /// Добавление департамента в список
+        /// </summary>
+        /// <param name="name">Наименование департамента</param>
         public void AddDepart(string name)
         {
             list.Add(new DepartmentDTO() { DepartName = name });
         }
 
-        public void DelDepart(object department)
+        /// <summary>
+        /// Удаление департамента из списка
+        /// </summary>
+        /// <param name="department">Департамент</param>
+        public void DelDepart(object department, EmployeeViewModel employee)
         {
-            list.Remove((DepartmentDTO)department);
+            var depart = (DepartmentDTO)department;
+            for(var i = 0; i < employee.GetEmployeeList.Count; i++)
+            {
+                if (employee.GetEmployeeList[i].Department == depart.DepartName)
+                    employee.DelEmployee(employee.GetEmployeeList[i]);
+            }
+            list.Remove(depart);
             department = null;
             GC.Collect();
             GC.WaitForPendingFinalizers();
+        }
+
+        /// <summary>
+        /// Изменение наименования департамента
+        /// </summary>
+        /// <param name="departmentName">Наименование департамента</param>
+        public void ChangeDepartmentName(object depart, string departmentName, EmployeeViewModel employee)
+        {
+            foreach (var s in employee.GetEmployeeList)
+            {
+                var department = (DepartmentDTO)depart;
+                if(s.Department == department.DepartName)
+                    s.Department = departmentName;
+            }
+
+            foreach (var department in list)
+            {
+                if (department == depart)
+                    department.DepartName = departmentName;
+            }
         }
     }
 }
